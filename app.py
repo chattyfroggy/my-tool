@@ -3,37 +3,73 @@ from rembg import remove
 from PIL import Image
 import io
 
-st.set_page_config(page_title="AI Background Remover")
-st.title("✂️ AI Background Remover")
+# Page Configuration
+st.set_page_config(page_title="AI Pro Background Remover", layout="centered")
 
-# Color Picker
-color = st.sidebar.color_picker("Background Color Chuney", "#FFFFFF")
+# Custom CSS for better look
+st.markdown("""
+    <style>
+    .main { background-color: #f5f7f9; }
+    .stButton>button { width: 100%; border-radius: 20px; height: 3em; background-color: #007bff; color: white; }
+    .stDownloadButton>button { width: 100%; border-radius: 20px; background-color: #28a745; color: white; }
+    </style>
+    """, unsafe_content_html=True)
+
+st.title("✨ AI Photo Professional")
+st.write("Professional photos banayein sirf ek click mein!")
+
+# Sidebar Settings
+st.sidebar.header("🎨 Appearance")
+choice = st.sidebar.radio("Background Style:", ["Solid Color", "Transparent"])
+
+bg_color = "#FFFFFF"
+if choice == "Solid Color":
+    bg_color = st.sidebar.color_picker("Color Chuniye", "#0000FF")
+    
+    # Quick Presets
+    st.sidebar.write("Quick Colors:")
+    if st.sidebar.button("Passport Blue"): bg_color = "#0000FF"
+    if st.sidebar.button("Plain White"): bg_color = "#FFFFFF"
 
 def hex_to_rgb(h):
     h = h.lstrip('#')
     return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
 
-upload = st.file_uploader("Photo upload karein", type=["png", "jpg", "jpeg"])
+# File Upload
+upload = st.file_uploader("Apni Photo Yahan Daalein", type=["png", "jpg", "jpeg"])
 
 if upload:
+    col1, col2 = st.columns(2)
     img = Image.open(upload)
-    st.image(img, caption="Original Photo", width=300)
+    with col1:
+        st.image(img, caption="Original Image")
     
-    if st.button("Magic Shuru Karein"):
-        with st.spinner("Kaam ho raha hai..."):
-            # Background hatana
+    if st.button("Magic Process Shuru Karein"):
+        with st.spinner("AI Background Hatane Mein Busy Hai..."):
+            # Process
             img_bytes = upload.getvalue()
             res_bytes = remove(img_bytes)
             subject = Image.open(io.BytesIO(res_bytes)).convert("RGBA")
             
-            # Naya Background lagana
-            bg_rgb = hex_to_rgb(color)
-            new_bg = Image.new("RGBA", subject.size, bg_rgb + (255,))
-            final = Image.alpha_composite(new_bg, subject).convert("RGB")
+            if choice == "Solid Color":
+                rgb = hex_to_rgb(bg_color)
+                new_bg = Image.new("RGBA", subject.size, rgb + (255,))
+                final = Image.alpha_composite(new_bg, subject).convert("RGB")
+            else:
+                final = subject
+
+            with col2:
+                st.image(final, caption="Result")
             
-            st.image(final, caption="Tayyar Photo", width=300)
-            
-            # Download Button
+            # Download
             buf = io.BytesIO()
-            final.save(buf, format="JPEG")
-            st.download_button("Download Karein", buf.getvalue(), "photo.jpg", "image/jpeg")
+            if choice == "Solid Color":
+                final.save(buf, format="JPEG")
+                mime_type = "image/jpeg"
+                ext = "jpg"
+            else:
+                final.save(buf, format="PNG")
+                mime_type = "image/png"
+                ext = "png"
+                
+            st.download_button(f"📥 Download {ext.upper()}", buf.getvalue(), f"pro_photo.{ext}", mime_type)
