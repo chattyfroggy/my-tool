@@ -3,7 +3,7 @@ import requests
 from PIL import Image
 import io
 
-# Naya Working Model URL (Purana 410 error de raha tha)
+# NAYA WORKING API URL
 API_URL = "https://api-inference.huggingface.co/models/briaai/RMBG-1.4"
 
 try:
@@ -25,17 +25,17 @@ if upload:
         with st.spinner("AI Server se connect ho raha hai..."):
             try:
                 # API Call
-                response = requests.post(API_URL, headers=headers, data=upload.getvalue())
+                response = requests.post(API_URL, headers=headers, data=upload.getvalue(), timeout=30)
                 
                 if response.status_code == 200:
                     st.image(response.content, caption="Turbo Result")
                     st.download_button("Download PNG", response.content, "froggy_result.png")
                 elif response.status_code == 503:
-                    # Model loading time
-                    st.warning("Model load ho raha hai (Model is loading), 20-30 seconds baad phir se button click karein.")
+                    # Model loading time (Jag raha hai server)
+                    st.warning("Model load ho raha hai (Loading...), 20 seconds baad phir se button click karein.")
                 elif response.status_code == 401:
-                    st.error("Token Invalid! Secrets check karein.")
+                    st.error("Token Invalid! Naya token banayein.")
                 else:
-                    st.error(f"Error {response.status_code}: Please try again later.")
+                    st.error(f"Error {response.status_code}: Please try again.")
             except Exception as e:
-                st.error("Network issue! Dubara try karein.")
+                st.error("Connection timeout! Dubara koshish karein.")
