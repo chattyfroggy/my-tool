@@ -3,15 +3,15 @@ import requests
 from PIL import Image
 import io
 
-# NAYA WORKING API URL
+# Naya Model URL
 API_URL = "https://api-inference.huggingface.co/models/briaai/RMBG-1.4"
 
 try:
-    # Secrets se token uthana
+    # Ye line secrets se HF_TOKEN ko uthayegi
     HF_TOKEN = st.secrets["HF_TOKEN"]
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 except:
-    st.error("Secrets mein HF_TOKEN nahi mila! Format check karein: HF_TOKEN = 'your_token'")
+    st.error("Secrets mein 'HF_TOKEN' nahi mila! Format check karein.")
     st.stop()
 
 st.title("⚡ ChattyFroggy Turbo Studio")
@@ -22,20 +22,16 @@ if upload:
     st.image(upload, caption="Original Photo", width=300)
     
     if st.button("Magic Turbo Remove ✨"):
-        with st.spinner("AI Server se connect ho raha hai..."):
+        with st.spinner("AI Server se result la raha hoon..."):
             try:
-                # API Call
                 response = requests.post(API_URL, headers=headers, data=upload.getvalue(), timeout=30)
                 
                 if response.status_code == 200:
-                    st.image(response.content, caption="Turbo Result")
-                    st.download_button("Download PNG", response.content, "froggy_result.png")
+                    st.image(response.content, caption="Success!")
+                    st.download_button("Download PNG", response.content, "result.png")
                 elif response.status_code == 503:
-                    # Model loading time (Jag raha hai server)
-                    st.warning("Model load ho raha hai (Loading...), 20 seconds baad phir se button click karein.")
-                elif response.status_code == 401:
-                    st.error("Token Invalid! Naya token banayein.")
+                    st.warning("Model load ho raha hai, 20-30 seconds baad phir se button dabayein.")
                 else:
-                    st.error(f"Error {response.status_code}: Please try again.")
+                    st.error(f"Error {response.status_code}: Token ya model issue hai.")
             except Exception as e:
                 st.error("Connection timeout! Dubara koshish karein.")
