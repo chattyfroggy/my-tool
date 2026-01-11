@@ -3,7 +3,7 @@ import requests
 from PIL import Image
 import io
 
-# UPDATE: Naya Model URL (Purana 410 error de raha tha)
+# Naya Working Model URL (Purana 410 error de raha tha)
 API_URL = "https://api-inference.huggingface.co/models/briaai/RMBG-1.4"
 
 try:
@@ -11,10 +11,10 @@ try:
     HF_TOKEN = st.secrets["HF_TOKEN"]
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 except:
-    st.error("Secrets mein HF_TOKEN nahi mila! Format check karein.")
+    st.error("Secrets mein HF_TOKEN nahi mila! Format check karein: HF_TOKEN = 'your_token'")
     st.stop()
 
-st.title("⚡ ChattyFroggy Turbo Fix")
+st.title("⚡ ChattyFroggy Turbo Studio")
 
 upload = st.file_uploader("Photo choose karein", type=["jpg", "png", "jpeg"])
 
@@ -31,11 +31,11 @@ if upload:
                     st.image(response.content, caption="Turbo Result")
                     st.download_button("Download PNG", response.content, "froggy_result.png")
                 elif response.status_code == 503:
-                    # Model load hone mein thoda waqt lagta hai
+                    # Model loading time
                     st.warning("Model load ho raha hai (Model is loading), 20-30 seconds baad phir se button click karein.")
-                elif response.status_code == 410:
-                    st.error("API link purana ho gaya hai. Model update ki zaroorat hai.")
+                elif response.status_code == 401:
+                    st.error("Token Invalid! Secrets check karein.")
                 else:
-                    st.error(f"Error {response.status_code}: Token ya model issue.")
+                    st.error(f"Error {response.status_code}: Please try again later.")
             except Exception as e:
-                st.error("Network issue! Please try again.")
+                st.error("Network issue! Dubara try karein.")
