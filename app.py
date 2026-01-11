@@ -1,37 +1,47 @@
 import streamlit as st
-import requests
+from rembg import remove
 from PIL import Image
 import io
+import gc # Garbage collector memory saaf rakhne ke liye
 
-# Naya Model URL
-API_URL = "https://api-inference.huggingface.co/models/briaai/RMBG-1.4"
+st.set_page_config(page_title="ChattyFroggy BG Remover", layout="centered")
 
-try:
-    # Ye line secrets se HF_TOKEN ko uthayegi
-    HF_TOKEN = st.secrets["HF_TOKEN"]
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-except:
-    st.error("Secrets mein 'HF_TOKEN' nahi mila! Format check karein.")
-    st.stop()
+# Custom CSS for better look
+st.markdown("""
+    <style>
+    .main { background-color: #f0f2f6; }
+    .stButton>button { width: 100%; border-radius: 10px; height: 3em; background-color: #FF4B4B; color: white; }
+    </style>
+    """, unsafe_allow_html=True)
 
-st.title("⚡ ChattyFroggy Turbo Studio")
+st.title("✂️ Simple Background Remover")
+st.write("Upload a photo and wait for the magic!")
 
-upload = st.file_uploader("Photo choose karein", type=["jpg", "png", "jpeg"])
+upload = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if upload:
-    st.image(upload, caption="Original Photo", width=300)
+    input_image = Image.open(upload)
+    st.image(input_image, caption="Original Image", use_container_width=True)
     
-    if st.button("Magic Turbo Remove ✨"):
-        with st.spinner("AI Server se result la raha hoon..."):
+    if st.button("Clean Background Now"):
+        with st.spinner("AI Model Loading... (Pehli baar mein 2-3 min lagenge, please wait)"):
             try:
-                response = requests.post(API_URL, headers=headers, data=upload.getvalue(), timeout=30)
+                # Memory saaf karna
+                gc.collect()
                 
-                if response.status_code == 200:
-                    st.image(response.content, caption="Success!")
-                    st.download_button("Download PNG", response.content, "result.png")
-                elif response.status_code == 503:
-                    st.warning("Model load ho raha hai, 20-30 seconds baad phir se button dabayein.")
-                else:
-                    st.error(f"Error {response.status_code}: Token ya model issue hai.")
+                # Processing
+                img_bytes = upload.getvalue()
+                output_bytes = remove(img_bytes)
+                
+                # Result display
+                result_img = Image.open(io.BytesIO(output_bytes))
+                st.image(result_img, caption="Result", use_container_width=True)
+                
+                st.download_button(
+                    label="Download Transparent Image",
+                    data=output_bytes,
+                    file_name="cleared_image.png",
+                    mime="image/png"
+                )
             except Exception as e:
-                st.error("Connection timeout! Dubara koshish karein.")
+                st.error(f"Server is busy: {e}. Please refresh and try again.")
